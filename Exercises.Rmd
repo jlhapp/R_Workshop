@@ -1,0 +1,97 @@
+---
+title: "Exercises"
+output:
+  html_document:
+    code_folding: hide
+    highlight: pygments
+    number_sections: yes
+    theme: readable
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercise 1
+
+1. Based on what you've learned, add the shapefile named "NC_Hurricanes" (found in the data folder) in R.
+
+2. What type of feature is this shapefile?  Points, lines, or polygons?
+
+3. How many hurricanes have hit any part of North Carolina since 1842?  
+
+4. Plot the hurricanes by themselves using the plot() function.  Then add the United States shapefile in the background.
+```{r, message=F, warning=F}
+library(rgdal)
+states <- readOGR(dsn = "data/UnitedStates.shp", layer = "UnitedStates", verbose = FALSE)
+NC_Hurricanes <- readOGR(dsn = "data/NC_Hurricanes.shp", layer = "NC_Hurricanes", verbose = FALSE)
+
+#Add the states
+plot(states)
+#Add hurricanes
+lines(NC_Hurricanes, col = "Red")
+```
+
+# Exercise 2
+
+1. Make a bar chart of hurricane wind speeds using the following break points: 74, 96, 111, 130, and 157.
+
+2. Add the hurricane shapefile to leaflet.
+
+```{r, message = F, warning = F}
+library(leaflet)
+
+NC_Hurricanes <- readOGR(dsn = "data/NC_Hurricanes.shp", layer = "NC_Hurricanes", verbose = FALSE)
+
+leaflet() %>% addTiles() %>% addPolylines(data = NC_Hurricanes, col = "red")
+```
+
+3. In the leaflet map, only display hurricanes that have occured since 2000 and add a popup that displays the name (hint: field is called "Name.")
+
+```{r, echo=FALSE}
+NC_Hurricanes <- readOGR(dsn = "data/NC_Hurricanes.shp", layer = "NC_Hurricanes", verbose = FALSE)
+
+Hurricanes_2000 <- subset(NC_Hurricanes, NC_Hurricanes@data$year >2000)
+
+leaflet() %>% addTiles() %>% addPolylines(data = Hurricanes_2000, col = "red", popup = ~paste("Hurricane Name: ", Name))
+
+```
+
+# Exercise 3 (RQGIS)
+
+1. Import the shapefiles called "MS_AL" and "April2011pr".  Based on what you've learned, find the QGIS tool called intersection and set the tools parameters.  Since we've already set up the environment settings, you can go directly to importing the shapefiles and seting the tools parameters.
+
+```{r}
+#Search for function names.  Change the search term as needed.  It will provide the folder name and name of the tool that you will use below.
+#find_algorithms(search_term = "intersection", qgis_env = my_env)
+
+#Use get_arg_man to get arguments for a specific tool.  Set the alg to the folder (QGIS) and the specific tool.  Then set the environment containing the paths to run QIGS API to "my_env"
+#params <- get_args_man(alg = "qgis:intersection", qgis_env = my_env)
+```
+
+2. What you want to do is clip the nationwide line shapefile to just Mississippi and Alabama and plot both maps and save the clipped line shapefile to a new shapefile (note: this will automatically occur if you set up the tools settings properly).
+
+``` {r}
+# #You can view what you need to write from the tool in the Environment tab
+# params$INPUT <- TornLns
+# params$INPUT2 <- MS_AL
+# params$OUTPUT <- file.path("G:/LearnR", "output.shp")
+# 
+# #Run the tool.  
+# result <- run_qgis(alg = "qgis:intersection",
+#                    params = params,
+#                    load_output = params$OUTPUT,
+#                    qgis_env = my_env)
+# 
+# #plot the tool
+# plot(MS_AL)
+# plot(result, pch = 21, add = TRUE, bg = "red", col = "black")
+```
+
+ ```{r, fig.retina=NULL, out.width=650, echo=FALSE} 
+ knitr::include_graphics("images/Tornado_Intersect.png") 
+ ``` 
