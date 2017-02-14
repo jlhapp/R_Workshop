@@ -1,0 +1,273 @@
+---
+title: "Walk_Through"
+author: "Jena Happ"
+date: "February 15, 2017"
+output:
+  html_document:
+    code_folding: hide
+    highlight: pygments
+    number_sections: yes
+    theme: readable
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r, message=F, warning=F}
+last.edited <- Sys.Date()
+preamble <- "This document was last updated"
+modified.date <- paste(preamble, last.edited, sep = " ")
+modified.date
+```
+
+
+
+#Importing Spatial Data
+Import the necessary libraries.  First, you'll need to install the package and then load the package.  If you do not have all of the packages required, please use the following code to install them. 
+```{r, message=FALSE}
+# install.packages("rgdal")
+# install.packages("leaflet")
+# install.packages("ggmap")
+# install.packages("sp")
+
+#Then load packages 
+library(rgdal)
+library(leaflet)
+library(ggmap)
+library(sp)
+library(magrittr)
+```
+
+
+There are many different packages users can use to load a shapefile into R.  Using the package called rgdal allows you to keep the projection of the shapefile.  When importing shapefiles, you need to specify the the data source name (by absolute path or relative path) and the layer name.
+
+Absolute path.  Define exactly the location of the shapefile
+
+```
+TornPTs <- readOGR(dsn = "D:/LearnR/BasicMapping/Apr11tornPT.shp", layer = "Apr11tornPT")
+```
+
+Relative path.  If you have a folder named "data" within your project, all you have to write is "data/SHAPEFILE NAME"
+
+```{r}
+TornadoPts <- readOGR(dsn = "data/Apr11tornPT.shp", layer = "Apr11tornPT", verbose=FALSE)
+```
+##Walk Through 1
+Import shapefiles and view the attribute table
+```
+Add the "UnitedStates" shapefile
+```
+
+Answer:
+
+``` {r, message=F, warning=F}
+library(rgdal)
+
+US <- readOGR(dsn = "data/UnitedStates.shp", layer = "UnitedStates", verbose = FALSE)
+```
+
+To view attributes and summary:
+```
+head(US)
+attributes(TornadoPts)
+summary(TornadoPts)
+```
+
+
+
+# Projections
+  
+
+##View the projection of the shapefile.  
+
+Read "Marine's" projection using proj4string
+```{r, message=F, warning=F}
+proj4string(TornadoPts)
+```
+
+
+##Preview the map
+
+Type the following command:
+
+```{r}
+plot(TornadoPts)
+```
+
+Customize the map:
+```{r, message=F, warning=F}
+plot(TornadoPts, cex = 3, col="red")
+```
+
+Add states to the tornado map:
+```{r, message=F, warning=F}
+plot(US)
+points(TornadoPts, cex = 3, col="red")
+```
+
+#EXERCISE GROUP 1
+
+#Charts
+Create a chart of tornado magnitudes from using the TornadoPts points shapefile.
+```{r}
+#Import Tornado points shapefile
+TornadoPts <- readOGR(dsn = "data/Apr11tornPT.shp", layer = "Apr11tornPT", verbose=FALSE)
+#Get a list of intensity of tornadoes from the magnitude field 
+Magnitude <- TornadoPts$MAG
+#Convert the list of magnitudes to a frequency table
+Magnitude.Freq <- table(Magnitude)
+#plot the frequency table
+barplot(Magnitude.Freq)
+#Customize the barplot
+barplot(Magnitude.Freq, col=heat.colors(5), xlab = "Magnitude", 
+        ylab = "Number of Tornadoes", main="Tornadoes by Magnitude, 
+        April 2011 Outbreak")
+```
+
+# Leaflet
+
+##Creating basic leaflet map
+Using the following code, you'll create a simple map of the tornado lines:
+
+```{r, warning=FALSE}
+Tornado11 = readOGR(dsn = "data/April2011.shp", layer = "April2011", verbose = FALSE)
+
+#Add lines from shapefile with all one color
+leaflet() %>% addTiles() %>%
+  addPolylines(data = Tornado11, col = "blue")
+```
+
+
+##Change the basemap using "addProviderTiles" function and the [name of the basemap](http://leaflet-extras.github.io/leaflet-providers/preview/index.html) you want to use.  
+```{r, echo=FALSE, message=F, warning=F}
+Tornado11 = readOGR(dsn = "data/April2011.shp", layer = "April2011", verbose= FALSE)
+#Add lines from shapefile with all one color
+leaflet() %>% addProviderTiles("Stamen.Watercolor") %>%
+  addPolylines(data = Tornado11, col = "blue")
+```
+
+
+##Customized leaflet map
+Using the following code, you'll create this more complex map of the tornadoes cateogrized by magnitude:
+
+
+
+```{r, warning=FALSE}
+#Map lines from a shapefile
+Tornado11 = readOGR(dsn = "data/April2011.shp", layer = "April2011",
+                    verbose = FALSE)
+
+#create pal variable and use colorNumeric expression since the field 
+#being used is an integer
+pal <- colorNumeric(
+  
+  #specify the color scheme you want to use
+  palette = "YlOrRd",
+  
+  #use domain = and specify the shapefile and field
+  domain = Tornado11$MagNum
+)
+
+#create leaflet and include line shapefile
+leaflet(Tornado11) %>% addTiles() %>%
+
+  #add polylines
+  addPolylines(
+    
+    #denote the "pal" variable created above and reference the 
+    #shapefile and field again.  Use "~paste()"function to add 
+    #custom field/column info
+    stroke = TRUE, color = ~pal(Tornado11$MagNum), 
+    popup = ~paste("Magnitude: ", MagNum)
+  )
+```
+
+
+#EXERCISE GROUP 2
+
+#RQGIS Package
+
+A package called "RQGIS" allows users to use QGIS tools.
+
+1. Set up environments
+
+```{r, warning=FALSE, message=F}
+library(RQGIS)
+library(raster)
+library(rgdal)
+library(maptools)
+library(rgeos)
+
+#Set your environment to the file location of QGIS on your computer
+my_env <- set_env("C:/Program Files/QGIS 2.14")
+
+#Ensure my_env is set to the correct location
+my_env
+
+#Since you want to set qt4, python27, grass, and msys folder add the following code
+####ALSO NOTE: You may have to create a new empty folder named msys in the apps folder
+my_env$qt4 <- "C:\\Program Files\\QGIS 2.14\\apps\\Qt4"
+my_env$python27 <- "C:\\Program Files\\QGIS 2.14\\apps\\Python27"
+my_env$grass <- "C:\\Program Files\\QGIS 2.14\\apps\\grass"
+my_env$msys <- "C:\\Program Files\\QGIS 2.14\\apps\\msys"
+
+```
+
+2. Search for a tool and set parameters
+
+```{r, warning=FALSE, message=F}
+#Search for function names.  Change the search term as needed.  It will provide the folder name and name of the tool that you will use below.
+find_algorithms(search_term = "centroid", qgis_env = my_env)
+
+#If unfamilliar with the tool parameters, view which parameters we need to set using this code
+get_usage(alg = "qgis:polygoncentroids",
+          qgis_env = my_env,
+          intern = TRUE)
+
+#Use get_arg_man to get arguments for a specific tool.  Set the alg to the folder (QGIS) and the specific tool.  Then set the environment containing the paths to run QIGS API to "my_env"
+paramsUS <- get_args_man(alg = "qgis:polygoncentroids", 
+                         qgis_env = my_env)
+```
+
+3. View parameters
+```{r, warning=FALSE, message=F}
+paramsUS
+```
+
+4. Set parameters and run the tool
+
+```{r, warning=FALSE, message=F}
+#Set the parameters
+paramsUS$INPUT_LAYER <- US
+paramsUS$OUTPUT_LAYER <- "US_Centroid.shp"
+
+#Run the tool
+UScent <- run_qgis(alg = "qgis:polygoncentroids",
+                   params = paramsUS,
+                   load_output = paramsUS$OUTPUT_LAYER,
+                   qgis_env = my_env)
+
+```
+
+5. View the results
+
+```{r, message=F, warning=FALSE}
+#Plot the centroids and US using the following code
+#Plot the US
+plot(US)
+
+#Then plot the centroids of the US created by QGIS tool
+plot(UScent, pch = 21, add = TRUE, bg = "lightblue", col = "black")
+
+```
+
+
+#Data Sources used
+The tornado tracks (lines) were downloaded from [NOAA Southern Region Headquarters](http://www.srh.noaa.gov/srh/ssd/mapping/).   The files were then converted from kml to a shapefile using the "KML to Layer" tool in ArcGIS for Desktop.  The tornado storm reports (points) were downloaded from [NOAA Southern Region Headquarters](http://www.srh.noaa.gov/srh/ssd/mapping/).
+
+The csv file of UNC schools were created by looking up individual schools and geocoding the addresses in ArcGIS for Desktop.  Once a shapefile was created, the xy coordinates were created using the "Add XY Coordinates" tool in ArcGIS for Desktop.
+
+Hurricane data was obtained from the [NOAA National Centers for Environmental Information](http://www.ncdc.noaa.gov/ibtracs/index.php?name=ibtracs-data).
+
+State polygon shapefiles were obtained from the [United States Census Bureau Tiger/Line Shapefiles.](https://www.census.gov/geo/maps-data/data/tiger-line.html)  The American Community Survey data was downloaded from the United States Census Bureau using the [American Community Survey 5-Year Estimates - Geodatabase Format](https://www.census.gov/geo/maps-data/data/tiger-data.html).  Once the geodatabase was imported into ArcGIS for Desktop, the shapefile and table was exported to a shapefile and a csv file.,
