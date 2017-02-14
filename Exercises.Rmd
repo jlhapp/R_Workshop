@@ -38,7 +38,7 @@ lines(NC_Hurricanes, col = "Red")
 
 # Exercise 2
 
-1. Make a bar chart of hurricane wind speeds using the following break points: 74, 96, 111, 130, and 157.
+1. Make a bar chart of hurricane wind speeds using the wmo_wind field.
 
 2. Add the hurricane shapefile to leaflet.
 
