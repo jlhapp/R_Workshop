@@ -120,3 +120,6 @@ leaflet() %>% addProviderTiles("MtbMap") %>% addPolylines(data = Hurricanes_2000
 # plot(MS_AL)
 # plot(result, pch = 21, add = TRUE, bg = "red", col = "black")
 ```
+ ```{r, fig.retina=NULL, out.width=650, echo=FALSE} 
+ knitr::include_graphics("images/Tornado_Intersect.png") 
+ ``` 
