@@ -37,6 +37,9 @@ library(leaflet)
 library(ggmap)
 library(sp)
 library(magrittr)
+library(RQGIS)
+library(rgeos)
+library(maptools)
 ```
 
 
@@ -51,6 +54,7 @@ TornPTs <- readOGR(dsn = "D:/LearnR/BasicMapping/Apr11tornPT.shp", layer = "Apr1
 Relative path.  If you have a folder named "data" within your project, all you have to write is "data/SHAPEFILE NAME"
 
 ```{r}
+library(rgdal)
 TornadoPts <- readOGR(dsn = "data/Apr11tornPT.shp", layer = "Apr11tornPT", verbose=FALSE)
 ```
 ##Walk Through 1
@@ -81,7 +85,7 @@ summary(TornadoPts)
 
 ##View the projection of the shapefile.  
 
-Read "Marine's" projection using proj4string
+Read "TornadoPts's" projection using proj4string
 ```{r, message=F, warning=F}
 proj4string(TornadoPts)
 ```
